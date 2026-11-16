@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM node:24-bookworm-slim AS build
 WORKDIR /cobranca-service-INFISICAL
 
 # Dependências necessárias ao Prisma
@@ -29,4 +29,4 @@ ENV PORT=7606
 EXPOSE 7606
 
 # Executa diretamente o JavaScript compilado (main.js)
-CMD ["node", "dist/main.js"]
+CMD ["npm", "run", "start:prod"]
