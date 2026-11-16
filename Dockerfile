@@ -1,31 +1,32 @@
 FROM node:24-alpine AS build
 WORKDIR /cobranca-service-INFISICAL
 
+# Dependências necessárias ao Prisma
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssl \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copiar arquivos de dependências
 COPY package*.json ./
+
+# Instalar dependências
 RUN npm ci
 
-COPY tsconfig*.json ./
-COPY src ./src
-COPY prisma ./prisma
-COPY prisma7.config.ts ./
+# Copiar código-fonte
+COPY . .
 
-RUN DATABASE_URL="mysql://build:build@localhost:3306/build" \
-    npx prisma generate
+# Gerar Prisma Client com variável temporária
+RUN DATABASE_URL="placeholder" npx prisma generate && \
+    npm run build && \
+    find dist -name "main.js"
 
+# Configuração da aplicação
+ENV NODE_ENV=development
+ENV PORT=7606
 
-RUN npm run build
-
-FROM node:24-alpine AS runtime
-WORKDIR /cobranca-service-INFISICAL
-ENV NODE_ENV=production
-
-COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-# Copia os arquivos compilados do estágio anterior
-COPY --from=build /cobranca-service-INFISICAL/dist ./dist
-
-EXPOSE 8888
+EXPOSE 7606
 
 # Executa diretamente o JavaScript compilado (main.js)
 CMD ["node", "dist/main.js"]
