@@ -132,7 +132,7 @@ pipeline {
             ====================================
              Cobranca Service Executado com sucesso
              DEPLOY EXECUTADO COM SUCESSO
-             PORTA: 7606
+             PORTA: 7544
             ====================================
             '''
         }
