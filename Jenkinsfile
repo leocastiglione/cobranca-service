@@ -33,24 +33,38 @@ pipeline {
                         variable: 'INFISICAL_SERVICE_TOKEN'
                     )
                 ]) {
-                        sh '''
-                            set +x
-                            set -eu
-                            umask 077
-                            rm -f .env
-                        
-                            npx -y @infisical/cli export \
-                                --env="dev" \
-                                --path="/cobranca-service" \
-                                --projectId=cbcc8789-3cf2-440c-8e90-8dfff9872bff \
-                                --token="$INFISICAL_SERVICE_TOKEN" \
-                                > .env
-                        
-                            test -s .env || { echo "ERRO: .env vazio."; exit 1; }
-                        
-                            echo "Variáveis carregadas:"
-                            cut -d= -f1 .env
-                        '''
+                    sh '''
+                        set +x
+                        set -eu
+                        umask 077
+                        rm -f .env
+
+                        npx -y @infisical/cli export \
+                            --env="dev" \
+                            --path="/cobranca-service" \
+                            --projectId=cbcc8789-3cf2-440c-8e90-8dfff9872bff \
+                            --token="$INFISICAL_SERVICE_TOKEN" \
+                            --format=dotenv > .env
+                        chmod 600 .env
+
+                        DB_USER=$(grep '^DB_USUARIO=' .env | cut -d= -f2- | sed -e "s/^['\\"]//" -e "s/['\\"]$//")
+                        DB_PASS=$(grep '^DB_USUARIO_SENHA=' .env | cut -d= -f2- | sed -e "s/^['\\"]//" -e "s/['\\"]$//")
+                        DB_NAME=$(grep '^COBRANCA=' .env | cut -d= -f2- | sed -e "s/^['\\"]//" -e "s/['\\"]$//")
+                        DB_HOST=edumysql.acesso.rj.senac.br
+                        DB_PORT=3306
+
+                        USER_ENC=$(node -e 'console.log(encodeURIComponent(process.argv[1]))' "$DB_USER")
+                        PASS_ENC=$(node -e 'console.log(encodeURIComponent(process.argv[1]))' "$DB_PASS")
+
+                        {
+                            echo "DB_HOST=${DB_HOST}"
+                            echo "DB_PORT=${DB_PORT}"
+                            echo "DATABASE_URL=mysql://${USER_ENC}:${PASS_ENC}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+                        } >> .env
+
+                        echo "Variáveis carregadas:"
+                        cut -d= -f1 .env
+                    '''
                 }
             }
         }
@@ -59,9 +73,7 @@ pipeline {
             steps {
                 sh '''
                     set -eu
-
                     docker compose config --quiet
-
                     echo "Docker Compose validado."
                 '''
             }
@@ -71,9 +83,7 @@ pipeline {
             steps {
                 sh '''
                     set -eu
-
                     docker compose build
-
                     echo "Imagem Docker construída."
                 '''
             }
@@ -83,10 +93,7 @@ pipeline {
             steps {
                 sh '''
                     set -eu
-
-                    docker compose up -d --no-build \
-                        --force-recreate
-
+                    docker compose up -d --no-build --force-recreate
                     echo "Deploy executado."
                 '''
             }
@@ -98,19 +105,13 @@ pipeline {
                     set -eu
 
                     echo "Verificando container..."
-
                     sleep 10
 
-                    RUNNING=$(docker inspect \
-                        --format '{{.State.Running}}' \
-                        "$APP_NAME")
+                    RUNNING=$(docker inspect --format '{{.State.Running}}' "$APP_NAME")
 
                     if [ "$RUNNING" != "true" ]; then
                         echo "ERRO: Container não está rodando."
-
-                        docker compose logs --tail=50 \
-                            "$APP_NAME" || true
-
+                        docker logs --tail=80 "$APP_NAME" || true
                         exit 1
                     fi
 
