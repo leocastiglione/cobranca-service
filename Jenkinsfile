@@ -41,7 +41,7 @@ pipeline {
 
                         npx -y @infisical/cli export \
                             --env="dev" \
-                            --path="/cobranca-service" \                
+                            --path="/cobranca-service" \        
                             --token="$INFISICAL_SERVICE_TOKEN" \
                             > .env                        
                         
