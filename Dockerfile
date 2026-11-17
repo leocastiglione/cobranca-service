@@ -24,9 +24,9 @@ RUN DATABASE_URL="placeholder" npx prisma generate && \
 
 # Configuração da aplicação
 ENV NODE_ENV=development
-ENV PORT=7606
+ENV PORT=7544
 
-EXPOSE 7606
+EXPOSE 7544
 
 # Executa diretamente o JavaScript compilado (main.js)
 CMD ["npm", "run", "start:prod"]
