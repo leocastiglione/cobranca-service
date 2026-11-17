@@ -1,26 +1,13 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { readFileSync } from 'fs';
-
-  const host = process.env.DB_HOST;
-  const port = process.env.DB_PORT || '3306';
-
-  if (!host) {
-    throw new Error('DB_HOST não configurado.');
-  }
-
-  process.env.DATABASE_URL =
-    `mysql://${encodeURIComponent(usuario)}:${encodeURIComponent(senha)}@${host}:${port}/${encodeURIComponent(database)}`;
-}
 
 
 (BigInt.prototype as any).toJSON = function () {
   return Number(this);
 };
 
-async function bootstrap(): Promise<void> {
-  loadDockerSecrets();
+async function bootstrap(): Promise<void> {  
   const { AppModule } = await import('./app.module.js');
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
