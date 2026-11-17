@@ -1,39 +1,31 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import {ConfigService} from '@nestjs/config';
-import {PrismaMariaDb} from '@prisma/adapter-mariadb';
 
-import {PrismaClient} from "../generated/prisma/client"
-
-function paraUrlDoDriver(url: string): string {
-    return url.replace('/^mysql:\/\//', 'mariadb://');
-}
+import { Injectable } from '@nestjs/common';
+import { PrismaClient } from '../generated/prisma/client.js';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import 'dotenv/config';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService extends PrismaClient {
+  constructor() {
+    const host = process.env.DB_URL;
+    const usuario = process.env.DB_USUARIO;
+    const senha = process.env.DB_USUARIO_SENHA;
+    const banco = process.env.COBRANCA;
 
-    private readonly logger = new Logger(PrismaService.name);
+    let databaseUrl = process.env.DATABASE_URL;
 
-    constructor(config: ConfigService) {
-        super({
-            adapter: new PrismaMariaDb({
-                host: config.getOrThrow<string>('DB_HOST'),
-                port: Number(config.get<string>('DB_PORT') || 3306),
-                user: config.getOrThrow<string>('DB_USUARIO'),
-                password: config.getOrThrow<string>('DB_USUARIO_SENHA'),
-                database: config.getOrThrow<string>('COBRANCA'),
-                connectionLimit: 5,
-        }),            
-        });
+    if (host && usuario && senha && banco) {
+      databaseUrl =
+        `mysql://${encodeURIComponent(usuario)}:${encodeURIComponent(senha)}` +
+        `@${host}:3306/${encodeURIComponent(banco)}`;
     }
 
-    async onModuleInit(): Promise<void> {
-
-        await this.$connect();
-        this.logger.log('Conectado ao banco de dados');
+    if (!databaseUrl) {
+      throw new Error('Configuração do banco de dados não encontrada');
     }
 
-    async onModuleDestroy() {
-        await this.$disconnect();
-        this.logger.log('Desconenctado do banco de dados');
-    }
+    const adapter = new PrismaMariaDb(databaseUrl);
+
+    super({ adapter });
+  }
 }
