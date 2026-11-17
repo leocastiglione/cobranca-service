@@ -41,9 +41,9 @@ pipeline {
 
                         npx -y @infisical/cli export \
                             --env="dev" \
-                            --path="/cobranca-service" \        
+                            --path="/cobranca-service" \
                             --token="$INFISICAL_SERVICE_TOKEN" \
-                            > .env                        
+                            > .env    
                         
                         test -s .env || { echo "ERRO: .env vazio."; exit 1; }
 
