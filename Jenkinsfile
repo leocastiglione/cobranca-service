@@ -29,7 +29,7 @@ pipeline {
             steps {
                 withCredentials([
                     string(
-                        credentialsId: 'INFISICAL_SERVICE_TOKEN',
+                        credentialsId: 'tokenleonardoaluguelcarro',
                         variable: 'INFISICAL_SERVICE_TOKEN'
                     )
                 ]) {
@@ -41,26 +41,11 @@ pipeline {
 
                         npx -y @infisical/cli export \
                             --env="dev" \
-                            --path="/cobranca-service" \
-                            --projectId=cbcc8789-3cf2-440c-8e90-8dfff9872bff \
+                            --path="/cobranca-service" \                            
                             --token="$INFISICAL_SERVICE_TOKEN" \
-                            --format=dotenv > .env
-                        chmod 600 .env
-
-                        DB_USER=$(grep '^DB_USUARIO=' .env | cut -d= -f2- | sed -e "s/^['\\"]//" -e "s/['\\"]$//")
-                        DB_PASS=$(grep '^DB_USUARIO_SENHA=' .env | cut -d= -f2- | sed -e "s/^['\\"]//" -e "s/['\\"]$//")
-                        DB_NAME=$(grep '^COBRANCA=' .env | cut -d= -f2- | sed -e "s/^['\\"]//" -e "s/['\\"]$//")
-                        DB_HOST=edumysql.acesso.rj.senac.br
-                        DB_PORT=3306
-
-                        USER_ENC=$(node -e 'console.log(encodeURIComponent(process.argv[1]))' "$DB_USER")
-                        PASS_ENC=$(node -e 'console.log(encodeURIComponent(process.argv[1]))' "$DB_PASS")
-
-                        {
-                            echo "DB_HOST=${DB_HOST}"
-                            echo "DB_PORT=${DB_PORT}"
-                            echo "DATABASE_URL=mysql://${USER_ENC}:${PASS_ENC}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
-                        } >> .env
+                            > .env                        
+                        
+                        test -s .env || { echo "ERRO: .env vazio."; exit 1; }
 
                         echo "Variáveis carregadas:"
                         cut -d= -f1 .env
