@@ -17,9 +17,9 @@ pipeline {
             steps {
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/main']],
+                    branches: [[name: '*/master']],
                     userRemoteConfigs: [[
-                        url: 'https://github.com/leocastiglione/cobranca-service-INFISICAL.git/'
+                        url: 'https://github.com/leocastiglione/cobranca-service.git'
                     ]]
                 ])
             }
@@ -29,8 +29,8 @@ pipeline {
             steps {
                 withCredentials([
                     string(
-                        credentialsId: 'SECRET_DO_JENKINS',
-                        variable: 'SECRET_DO_JENKINS'
+                        credentialsId: 'INFISICAL_SERVICE_TOKEN',
+                        variable: 'INFISICAL_SERVICE_TOKEN'
                     )
                 ]) {
                         sh '''
@@ -42,7 +42,8 @@ pipeline {
                             npx -y @infisical/cli export \
                                 --env="dev" \
                                 --path="/cobranca-service" \
-                                --token="$SECRET_DO_JENKINS" \
+                                --projectId=cbcc8789-3cf2-440c-8e90-8dfff9872bff \
+                                --token="$INFISICAL_SERVICE_TOKEN" \
                                 > .env
                         
                             test -s .env || { echo "ERRO: .env vazio."; exit 1; }
