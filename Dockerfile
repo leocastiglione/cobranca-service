@@ -1,5 +1,5 @@
-FROM node:24-bookworm-slim AS build
-WORKDIR /cobranca-service-INFISICAL
+FROM node:24-bookworm-slim
+WORKDIR /cobranca-service
 
 # Dependências necessárias ao Prisma
 RUN apt-get update && \
